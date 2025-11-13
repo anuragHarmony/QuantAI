@@ -26,6 +26,10 @@ rich>=13.9.0  # Latest terminal formatting
 pytest>=8.3.0  # Latest testing framework
 pytest-asyncio>=0.24.0  # Async testing support
 
+# OpenAI API (Recommended for production-quality embeddings and RAG)
+openai>=1.54.0  # Latest OpenAI API - best embeddings and LLM quality
+tiktoken>=0.8.0  # Token counting for OpenAI models
+
 # Optional: Better embedding models for financial text
 # Uncomment to use domain-specific models:
 # transformers>=4.50.0  # For FinBERT and other transformers
