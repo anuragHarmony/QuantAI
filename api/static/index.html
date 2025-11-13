@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantAI Knowledge Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-card h3 {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            font-size: 1.5em;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .upload-zone {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .upload-zone:hover {
+            background: #f8f9fa;
+            border-color: #764ba2;
+        }
+
+        .upload-zone.dragover {
+            background: #e8ecff;
+            border-color: #667eea;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results {
+            margin-top: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .result-item, .message {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-item h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .result-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .badge-type {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .badge-score {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .badge-source {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .content {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .message.user {
+            background: #e8ecff;
+            border-left-color: #667eea;
+        }
+
+        .message.assistant {
+            background: #f8f9fa;
+            border-left-color: #764ba2;
+        }
+
+        .message-label {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .sources {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .sources h5 {
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .source-item {
+            padding: 8px;
+            background: white;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📚 QuantAI Knowledge Manager</h1>
+            <p>AI-powered knowledge management for quantitative finance research</p>
+
+            <div class="stats" id="stats">
+                <div class="stat-card">
+                    <h3>Total Chunks</h3>
+                    <p id="totalChunks">-</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Vector Store</h3>
+                    <p id="vectorStore">-</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Embedding Model</h3>
+                    <p id="embeddingModel">-</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Status</h3>
+                    <p id="status">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Upload Section -->
+            <div class="card">
+                <h2>📤 Upload Documents</h2>
+
+                <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📄</div>
+                    <p><strong>Click to upload</strong> or drag and drop</p>
+                    <p style="color: #999; margin-top: 10px;">PDF or TXT files</p>
+                </div>
+
+                <input type="file" id="fileInput" accept=".pdf,.txt" multiple onchange="handleFiles(this.files)">
+
+                <input type="text" id="bookName" placeholder="Document name (optional - uses filename if empty)">
+
+                <button onclick="uploadDocument()" id="uploadBtn">Upload & Index</button>
+
+                <div id="uploadStatus"></div>
+            </div>
+
+            <!-- Search Section -->
+            <div class="card">
+                <h2>🔍 Search Knowledge</h2>
+
+                <input type="text" id="searchQuery" placeholder="What do you want to search for?" onkeypress="if(event.key==='Enter') searchKnowledge()">
+
+                <button onclick="searchKnowledge()">Search</button>
+
+                <div id="searchResults" class="results"></div>
+            </div>
+
+            <!-- AI Q&A Section -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2>🤖 Ask AI (RAG-Powered)</h2>
+
+                <textarea id="questionInput" placeholder="Ask a question about quantitative trading, strategies, risk management..."></textarea>
+
+                <button onclick="askAI()">Get AI Answer</button>
+
+                <div id="aiResponse" class="results"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load stats on page load
+        window.addEventListener('load', loadStats);
+        setInterval(loadStats, 10000); // Refresh every 10 seconds
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+
+                document.getElementById('totalChunks').textContent = data.total_chunks || 0;
+                document.getElementById('vectorStore').textContent = data.vector_store || 'Unknown';
+                document.getElementById('embeddingModel').textContent = (data.embedding_model || 'Unknown').split('/').pop();
+                document.getElementById('status').textContent = '🟢 Ready';
+                document.getElementById('status').style.color = '#2e7d32';
+            } catch (error) {
+                document.getElementById('status').textContent = '🔴 Error';
+                document.getElementById('status').style.color = '#c62828';
+            }
+        }
+
+        // Drag and drop handling
+        const uploadZone = document.getElementById('uploadZone');
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                document.getElementById('fileInput').files = files;
+                const fileName = Array.from(files).map(f => f.name).join(', ');
+                document.getElementById('uploadZone').querySelector('p').innerHTML = `<strong>Selected:</strong> ${fileName}`;
+            }
+        }
+
+        async function uploadDocument() {
+            const fileInput = document.getElementById('fileInput');
+            const bookName = document.getElementById('bookName').value;
+            const statusDiv = document.getElementById('uploadStatus');
+            const uploadBtn = document.getElementById('uploadBtn');
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                statusDiv.innerHTML = '<div class="error-message">Please select a file first</div>';
+                return;
+            }
+
+            uploadBtn.disabled = true;
+            statusDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Uploading and indexing...</p></div>';
+
+            try {
+                for (const file of fileInput.files) {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    if (bookName) {
+                        formData.append('book_name', bookName);
+                    }
+
+                    const response = await fetch('/api/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        statusDiv.innerHTML = `<div class="success-message">✅ Successfully indexed: ${data.book_name}<br>Added ${data.chunks_added} knowledge chunks</div>`;
+                        fileInput.value = '';
+                        document.getElementById('bookName').value = '';
+                        document.getElementById('uploadZone').querySelector('p').innerHTML = '<strong>Click to upload</strong> or drag and drop';
+                        loadStats();
+                    } else {
+                        throw new Error(data.detail || 'Upload failed');
+                    }
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error-message">❌ Error: ${error.message}</div>`;
+            } finally {
+                uploadBtn.disabled = false;
+            }
+        }
+
+        async function searchKnowledge() {
+            const query = document.getElementById('searchQuery').value;
+            const resultsDiv = document.getElementById('searchResults');
+
+            if (!query.trim()) {
+                resultsDiv.innerHTML = '<div class="error-message">Please enter a search query</div>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Searching...</p></div>';
+
+            try {
+                const formData = new FormData();
+                formData.append('query', query);
+                formData.append('max_results', '10');
+
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.results.length > 0) {
+                    let html = `<p style="margin-bottom: 15px;"><strong>Found ${data.num_results} results</strong></p>`;
+
+                    data.results.forEach((result, index) => {
+                        html += `
+                            <div class="result-item">
+                                <div class="result-meta">
+                                    <span class="badge badge-type">${result.chunk_type}</span>
+                                    <span class="badge badge-score">Score: ${result.relevance_score.toFixed(3)}</span>
+                                    <span class="badge badge-source">${result.source_book}</span>
+                                </div>
+                                <div class="content">${result.content}</div>
+                            </div>
+                        `;
+                    });
+
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.innerHTML = '<div class="error-message">No results found</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function askAI() {
+            const question = document.getElementById('questionInput').value;
+            const responseDiv = document.getElementById('aiResponse');
+
+            if (!question.trim()) {
+                responseDiv.innerHTML = '<div class="error-message">Please enter a question</div>';
+                return;
+            }
+
+            responseDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>AI is thinking...</p></div>';
+
+            try {
+                const formData = new FormData();
+                formData.append('question', question);
+                formData.append('include_examples', 'true');
+                formData.append('include_citations', 'true');
+
+                const response = await fetch('/api/ask', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    let html = `
+                        <div class="message user">
+                            <div class="message-label">Your Question:</div>
+                            ${data.question}
+                        </div>
+                        <div class="message assistant">
+                            <div class="message-label">AI Answer (${data.model}):</div>
+                            <div style="white-space: pre-wrap;">${data.answer}</div>
+                    `;
+
+                    if (data.sources && data.sources.length > 0) {
+                        html += `
+                            <div class="sources">
+                                <h5>📚 Sources (${data.num_sources}):</h5>
+                                ${data.sources.slice(0, 5).map(source => `
+                                    <div class="source-item">
+                                        <strong>${source.book}</strong> (${source.type}) - Relevance: ${source.relevance.toFixed(3)}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+
+                    html += `
+                            <div style="margin-top: 15px; font-size: 0.9em; color: #666;">
+                                Confidence: ${data.confidence.toFixed(3)} | Sources: ${data.num_sources}
+                            </div>
+                        </div>
+                    `;
+
+                    responseDiv.innerHTML = html;
+                } else {
+                    throw new Error('AI request failed');
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `<div class="error-message">Error: ${error.message}<br>Make sure OpenAI API key is configured in .env file</div>`;
+            }
+        }
+
+        // Enter key support for question input
+        document.getElementById('questionInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                askAI();
+            }
+        });
+    </script>
+</body>
+</html>
