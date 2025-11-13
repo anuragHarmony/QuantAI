@@ -1,27 +1,32 @@
-# QuantAI Requirements
+# QuantAI Requirements - Latest versions as of November 2025
 # Install with: pip install -r requirements.txt
 
 # Document processing
-pymupdf>=1.23.0
-pdfplumber>=0.10.0
+pymupdf>=1.24.0  # Latest PDF processing library
+pdfplumber>=0.11.0  # Alternative PDF extraction
 
-# Vector store and embeddings
-chromadb>=0.4.0
-sentence-transformers>=2.2.2
+# Vector store and embeddings (Best for RAG in 2025)
+chromadb>=1.3.4  # Latest version - Best for Python RAG prototyping
+sentence-transformers>=5.1.2  # Latest with Sparse Embedding support
 
 # Data models and validation
-pydantic>=2.0.0
-pydantic-settings>=2.0.0
+pydantic>=2.12.4  # Latest with improved performance
+pydantic-settings>=2.6.0  # Latest settings management
 
 # Data manipulation
-pandas>=2.0.0
-numpy>=1.24.0
+pandas>=2.2.0  # Latest data analysis library
+numpy>=2.0.0  # Latest numerical computing
 
 # Utilities
-loguru>=0.7.0
-python-dotenv>=1.0.0
-rich>=13.0.0
+loguru>=0.7.2  # Latest logging library
+python-dotenv>=1.0.1  # Environment variable management
+rich>=13.9.0  # Latest terminal formatting
 
 # Testing
-pytest>=7.4.0
-pytest-asyncio>=0.21.0
+pytest>=8.3.0  # Latest testing framework
+pytest-asyncio>=0.24.0  # Async testing support
+
+# Optional: Better embedding models for financial text
+# Uncomment to use domain-specific models:
+# transformers>=4.50.0  # For FinBERT and other transformers
+# torch>=2.4.0  # Required for transformers
