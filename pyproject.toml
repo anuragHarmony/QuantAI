@@ -1,0 +1,51 @@
+[tool.poetry]
+name = "quantai"
+version = "0.1.0"
+description = "AI-Human Collaborative Quant Research Platform"
+authors = ["QuantAI Team"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+# Document processing
+pymupdf = "^1.23.0"
+pdfplumber = "^0.10.0"
+ebooklib = "^0.18"
+
+# Vector store and embeddings
+chromadb = "^0.4.0"
+sentence-transformers = "^2.2.2"
+openai = "^1.0.0"
+
+# Data models and validation
+pydantic = "^2.0.0"
+pydantic-settings = "^2.0.0"
+
+# LLM integration
+langchain = "^0.1.0"
+langchain-openai = "^0.0.2"
+tiktoken = "^0.5.0"
+
+# Data manipulation
+pandas = "^2.0.0"
+numpy = "^1.24.0"
+
+# API and web
+fastapi = "^0.104.0"
+uvicorn = "^0.24.0"
+python-multipart = "^0.0.6"
+
+# Utilities
+loguru = "^0.7.0"
+python-dotenv = "^1.0.0"
+rich = "^13.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-asyncio = "^0.21.0"
+black = "^23.0.0"
+ruff = "^0.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

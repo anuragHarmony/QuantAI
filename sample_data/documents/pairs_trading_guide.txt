@@ -1,0 +1,260 @@
+Pairs Trading and Statistical Arbitrage
+
+Chapter 1: Introduction to Pairs Trading
+
+Pairs trading is a market-neutral trading strategy that involves matching a long position with a short position in two highly correlated instruments. The strategy profits from the temporary divergence of the spread between the two securities.
+
+Fundamental Concepts
+
+Cointegration
+Cointegration is the statistical property that makes pairs trading possible. Two price series are cointegrated if a linear combination of them is stationary, even though the individual series themselves may be non-stationary.
+
+Mathematically, if we have two price series P1 and P2, they are cointegrated if:
+P1(t) - β × P2(t) = ε(t)
+
+Where ε(t) is a stationary process with mean μ and standard deviation σ.
+
+The coefficient β is the hedge ratio, which determines how many units of P2 to short for each unit of P1 that is bought (or vice versa).
+
+Testing for Cointegration
+The Augmented Dickey-Fuller (ADF) test is commonly used to test for cointegration:
+
+1. Perform linear regression: P1 = α + β × P2 + ε
+2. Test the residuals ε for stationarity using ADF test
+3. If p-value < 0.05, the series are likely cointegrated
+
+Example: Testing AAPL and MSFT for Cointegration
+
+import numpy as np
+from statsmodels.tsa.stattools import adfuller
+
+# Calculate spread
+spread = prices_aapl - beta * prices_msft
+
+# Test for stationarity
+adf_result = adfuller(spread)
+p_value = adf_result[1]
+
+if p_value < 0.05:
+    print("Series are cointegrated - suitable for pairs trading")
+else:
+    print("Series are not cointegrated - avoid pairs trading")
+
+Chapter 2: Building a Pairs Trading Strategy
+
+Strategy Components
+
+1. Pair Selection
+Not all correlated pairs are suitable for pairs trading. Key criteria:
+- Strong statistical cointegration (p-value < 0.01)
+- Similar market capitalization
+- Same sector or related industries
+- High trading liquidity
+- Low correlation with broader market
+
+Example pairs:
+- Coca-Cola (KO) and PepsiCo (PEP)
+- Goldman Sachs (GS) and Morgan Stanley (MS)
+- ExxonMobil (XOM) and Chevron (CVX)
+
+2. Calculating the Spread
+The spread represents the difference between the two securities adjusted by the hedge ratio:
+
+Spread = Stock1 - (Hedge_Ratio × Stock2)
+
+The hedge ratio can be calculated using:
+- Ordinary Least Squares (OLS) regression
+- Total Least Squares (TLS)
+- Kalman Filter (for time-varying beta)
+
+3. Z-Score Calculation
+The z-score normalizes the spread, making it easier to identify trading opportunities:
+
+Z-Score = (Spread - Mean_Spread) / StdDev_Spread
+
+Trading signals are generated based on z-score thresholds:
+- Enter long spread when z-score < -2.0 (spread is undervalued)
+- Enter short spread when z-score > +2.0 (spread is overvalued)
+- Exit position when z-score returns to 0 (mean reversion)
+
+Example Implementation
+
+def calculate_signals(spread, window=20, entry_threshold=2.0, exit_threshold=0.5):
+    # Calculate rolling mean and standard deviation
+    rolling_mean = spread.rolling(window=window).mean()
+    rolling_std = spread.rolling(window=window).std()
+
+    # Calculate z-score
+    z_score = (spread - rolling_mean) / rolling_std
+
+    # Generate signals
+    signals = []
+    position = 0  # 0=flat, 1=long spread, -1=short spread
+
+    for z in z_score:
+        if z < -entry_threshold and position == 0:
+            signals.append('LONG_SPREAD')  # Buy stock1, sell stock2
+            position = 1
+        elif z > entry_threshold and position == 0:
+            signals.append('SHORT_SPREAD')  # Sell stock1, buy stock2
+            position = -1
+        elif abs(z) < exit_threshold and position != 0:
+            signals.append('CLOSE')
+            position = 0
+        else:
+            signals.append('HOLD')
+
+    return signals, z_score
+
+Chapter 3: Advanced Concepts
+
+Dynamic Hedge Ratios
+
+Traditional pairs trading uses a static hedge ratio calculated over a historical window. However, the relationship between pairs can change over time. The Kalman Filter is a powerful technique for estimating time-varying hedge ratios.
+
+Kalman Filter for Dynamic Beta
+The Kalman Filter updates the hedge ratio β at each time step based on new observations:
+
+State equation: β(t) = β(t-1) + w(t)
+Observation equation: P1(t) = β(t) × P2(t) + v(t)
+
+Where w(t) and v(t) are noise terms.
+
+This allows the strategy to adapt to changing market conditions and maintain profitability even as the relationship between the pairs evolves.
+
+Multiple Pairs and Portfolio Approach
+
+Rather than trading a single pair, sophisticated traders manage portfolios of multiple pairs simultaneously. This provides several advantages:
+
+1. Diversification reduces strategy-specific risk
+2. More consistent returns across different market conditions
+3. Lower overall portfolio volatility
+
+Portfolio Construction Guidelines:
+- Trade 10-20 pairs simultaneously
+- Ensure pairs are from different sectors (avoid concentration risk)
+- Equal risk allocation per pair (not equal capital)
+- Maximum position size: 5-10% per pair
+
+Risk Management in Pairs Trading
+
+Stop-Loss Mechanisms
+Even market-neutral strategies need stop-losses:
+
+1. Z-Score Stop: Exit if z-score exceeds ±3.0 (divergence instead of convergence)
+2. Time Stop: Exit after N days if convergence hasn't occurred
+3. Correlation Break: Exit if rolling correlation falls below threshold (e.g., 0.7)
+
+Position Sizing
+Use volatility-adjusted position sizing:
+
+Position Size = Target_Risk / (Spread_Volatility × Beta)
+
+For example, if targeting 1% risk per trade and the spread has a volatility of 2%, allocate 50% of capital to the pair (split between the two legs).
+
+Transaction Costs
+Pairs trading involves frequent trading, making transaction costs significant:
+
+- Commission costs (typically 0.005-0.01% per side)
+- Bid-ask spread costs
+- Market impact for large orders
+- Borrowing costs for short positions
+
+Always include these costs in backtesting to ensure realistic expectations.
+
+Chapter 4: Statistical Arbitrage Extensions
+
+Mean Reversion Speed
+The half-life of mean reversion indicates how quickly the spread returns to equilibrium:
+
+Half-Life = -log(2) / log(φ)
+
+Where φ is the AR(1) coefficient from:
+Spread(t) = φ × Spread(t-1) + ε(t)
+
+Shorter half-lives (< 20 days) are preferable, as capital is not tied up for extended periods.
+
+Multi-Asset Statistical Arbitrage
+Statistical arbitrage can be extended beyond pairs to baskets of securities:
+
+Spread = Σ(w_i × P_i)
+
+Where w_i are weights determined by principal component analysis (PCA) or factor models.
+
+ETF Arbitrage Example:
+Trade the spread between:
+- Long: Individual tech stocks (AAPL, MSFT, GOOGL, AMZN)
+- Short: QQQ (Nasdaq-100 ETF)
+
+This captures temporary mispricings between the ETF and its components.
+
+Chapter 5: Real-World Considerations
+
+Market Regime Sensitivity
+
+Pairs trading performance varies by market regime:
+
+Optimal Conditions:
+- Low to medium volatility markets
+- Stable correlations
+- Mean-reverting price action
+
+Challenging Conditions:
+- High volatility (correlations break down)
+- Strong trending markets (spread can diverge for extended periods)
+- Crisis periods (flights to quality disrupt historical relationships)
+
+Example: During the 2008 financial crisis, many traditionally cointegrated pairs broke down as correlations went to 1.0 (everything fell together). Traders who didn't use proper stop-losses suffered significant losses.
+
+Execution Considerations
+
+1. Simultaneous Execution
+Execute both legs simultaneously to avoid legging risk (price moves between legs).
+
+2. Order Types
+- Use limit orders to reduce transaction costs
+- Ensure adequate liquidity before entering positions
+- Monitor for partial fills that create unwanted directional exposure
+
+3. Rebalancing
+Periodically rebalance the hedge ratio to maintain market neutrality:
+- Daily rebalancing for highly liquid pairs
+- Weekly rebalancing for less liquid pairs
+- After significant price moves (>5%)
+
+Performance Expectations
+
+Realistic Performance Metrics:
+- Annual returns: 8-15%
+- Sharpe Ratio: 1.5-2.5
+- Maximum drawdown: 10-20%
+- Win rate: 60-70%
+- Average holding period: 5-15 days
+
+These metrics assume proper risk management and diversification across multiple pairs.
+
+Case Study: Goldman Sachs vs Morgan Stanley (2019-2020)
+
+Period: January 2019 - December 2020
+Hedge Ratio: 0.85 (calculated via OLS regression)
+
+Performance:
+- Total return: 12.3%
+- Sharpe Ratio: 1.8
+- Maximum drawdown: -8.2%
+- Number of trades: 23
+- Win rate: 65%
+
+Key observation: The strategy performed well during normal market conditions (2019) but experienced drawdown during Q1 2020 (COVID-19) when the spread widened unexpectedly. The strategy recovered as the spread mean-reverted in Q2-Q4 2020.
+
+Conclusion
+
+Pairs trading is a robust, market-neutral strategy that can generate consistent returns across various market conditions. Success requires:
+
+1. Rigorous statistical testing for cointegration
+2. Proper risk management with stop-losses
+3. Consideration of transaction costs
+4. Diversification across multiple pairs
+5. Adaptation to changing market regimes
+
+While the basic concept is simple, implementation requires attention to detail and continuous monitoring to ensure profitability.
