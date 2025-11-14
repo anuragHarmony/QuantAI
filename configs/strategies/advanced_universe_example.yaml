@@ -1,0 +1,88 @@
+# Advanced Universe Example with Filters and Dynamic Selection
+
+name: "Dynamic_Universe_Strategy"
+version: "2.0.0"
+description: "Strategy using advanced universe features - filters, tags, patterns"
+strategy_id: "dynamic_universe_v2"
+
+universe:
+  name: "dynamic_crypto"
+  description: "Dynamically selected crypto assets"
+
+  # Multiple ticker groups
+  tickers:
+    # All BTC pairs
+    - id: "btc_pairs"
+      description: "All BTC trading pairs"
+      instruments:
+        - "BTC/USDT"
+        - "BTC/USD"
+        - "BTC/EUR"
+        - "ETH/BTC"
+
+    # All USDT pairs (major coins)
+    - id: "usdt_majors"
+      description: "Major coins vs USDT"
+      exchange: "binance"
+      type: "spot"
+      tags: ["usdt_pair", "major"]
+      instruments:
+        - "BTC/USDT"
+        - "ETH/USDT"
+        - "BNB/USDT"
+        - "XRP/USDT"
+        - "ADA/USDT"
+
+    # Layer 1 blockchains
+    - id: "layer1_coins"
+      description: "Layer 1 blockchain tokens"
+      exchange: "binance"
+      tags: ["layer1", "platform"]
+      instruments:
+        - symbol: "ETH/USDT"
+          tags: ["layer1", "defi", "major"]
+          weight: 0.4
+        - symbol: "SOL/USDT"
+          tags: ["layer1", "high_tps"]
+          weight: 0.3
+        - symbol: "AVAX/USDT"
+          tags: ["layer1", "evm_compatible"]
+          weight: 0.2
+        - symbol: "NEAR/USDT"
+          tags: ["layer1", "sharding"]
+          weight: 0.1
+
+  # Filters for dynamic instrument selection
+  filters:
+    # Only enabled instruments
+    - type: "enabled"
+      enabled: true
+
+    # Only USDT quote currency
+    - type: "quote_currency"
+      quote_currencies: ["USDT"]
+
+# Subscription settings
+subscriptions:
+  data_types: ["tick", "trade", "orderbook"]
+
+# Strategy parameters
+parameters:
+  # Use specific ticker or filter dynamically
+  active_ticker: "usdt_majors"  # Which ticker to trade
+
+  # Or use tags for selection
+  use_tags: ["major", "layer1"]
+
+  # Dynamic rebalancing based on performance
+  momentum_lookback: 20
+  top_performers_count: 3
+
+# Risk limits
+risk_limits:
+  max_position_size: 5.0
+  max_order_size: 1.0
+  max_daily_loss: 3000
+
+enabled: true
+paper_trading: false

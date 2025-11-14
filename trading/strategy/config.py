@@ -72,8 +72,11 @@ class StrategyConfig:
     description: str = ""
     strategy_id: Optional[str] = None  # Unique ID (auto-generated if not provided)
 
-    # Subscriptions
+    # Subscriptions (legacy - use universe instead)
     subscriptions: SubscriptionConfig = field(default_factory=SubscriptionConfig)
+
+    # Universe configuration (recommended way to define instruments)
+    universe: Optional[Dict] = None  # Universe configuration
 
     # Strategy parameters (custom per strategy)
     parameters: Dict[str, Any] = field(default_factory=dict)
@@ -154,6 +157,7 @@ class StrategyConfig:
             description=data.get("description", ""),
             strategy_id=strategy_id,
             subscriptions=subscriptions,
+            universe=data.get("universe"),  # Universe configuration
             parameters=data.get("parameters", {}),
             risk_limits=risk_limits,
             initial_positions_file=data.get("initial_positions_file"),

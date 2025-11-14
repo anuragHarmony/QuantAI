@@ -76,10 +76,15 @@ class BaseStrategy(ABC):
         self.is_running = False
         self.strategy_id = config.strategy_id
 
+        # Initialize Universe
+        self.universe = self._create_universe()
+
         # Custom state (for subclasses)
         self.state: Dict = {}
 
         logger.info(f"Initialized strategy: {config.name} (ID: {self.strategy_id})")
+        if self.universe:
+            logger.info(f"  Universe: {len(self.universe)} instruments, {len(self.universe._tickers)} tickers")
 
     async def start(self) -> None:
         """
@@ -134,36 +139,59 @@ class BaseStrategy(ABC):
         self.is_running = False
         logger.info(f"Strategy stopped: {self.strategy_id}")
 
+    def _create_universe(self):
+        """Create universe from config"""
+        if not self.config.universe:
+            # No universe config, fallback to legacy subscriptions
+            return None
+
+        from ..universe import Universe, UniverseConfig
+
+        universe_config = UniverseConfig.from_dict(self.config.universe)
+        return Universe.from_config(universe_config)
+
     async def _subscribe_market_data(self) -> None:
         """Subscribe to configured market data"""
 
-        sub = self.config.subscriptions
+        # Use universe if available, otherwise fall back to legacy subscriptions
+        if self.universe:
+            # Get all symbols from universe
+            symbols = self.universe.get_symbols()
+            data_types = self.config.subscriptions.data_types or ["tick"]
+        else:
+            # Legacy subscription method
+            sub = self.config.subscriptions
+            symbols = sub.symbols
+            data_types = sub.data_types
 
         # Subscribe to ticks
-        if "tick" in sub.data_types:
+        if "tick" in data_types:
             await self.event_bus.subscribe("tick", self._handle_tick)
 
         # Subscribe to trades
-        if "trade" in sub.data_types:
+        if "trade" in data_types:
             await self.event_bus.subscribe("trade", self._handle_trade)
 
         # Subscribe to order book
-        if "orderbook" in sub.data_types:
+        if "orderbook" in data_types:
             await self.event_bus.subscribe("order_book", self._handle_orderbook)
 
         # Subscribe to bars
-        if "bar" in sub.data_types:
+        if "bar" in data_types:
             await self.event_bus.subscribe("bar", self._handle_bar)
 
         logger.debug(
-            f"Strategy {self.strategy_id} subscribed to: {sub.data_types} "
-            f"for {sub.symbols}"
+            f"Strategy {self.strategy_id} subscribed to: {data_types} "
+            f"for {len(symbols)} instruments"
         )
 
     async def _handle_tick(self, event: TickEvent) -> None:
         """Handle tick event"""
-        # Filter by configured symbols
-        if event.symbol not in self.config.subscriptions.symbols:
+        # Filter by configured symbols/universe
+        if self.universe:
+            if event.symbol not in self.universe:
+                return
+        elif event.symbol not in self.config.subscriptions.symbols:
             return
 
         # Call strategy implementation
@@ -177,7 +205,11 @@ class BaseStrategy(ABC):
 
     async def _handle_trade(self, event: TradeEvent) -> None:
         """Handle trade event"""
-        if event.symbol not in self.config.subscriptions.symbols:
+        # Filter by configured symbols/universe
+        if self.universe:
+            if event.symbol not in self.universe:
+                return
+        elif event.symbol not in self.config.subscriptions.symbols:
             return
 
         try:
@@ -190,7 +222,11 @@ class BaseStrategy(ABC):
 
     async def _handle_orderbook(self, event: OrderBookEvent) -> None:
         """Handle order book event"""
-        if event.symbol not in self.config.subscriptions.symbols:
+        # Filter by configured symbols/universe
+        if self.universe:
+            if event.symbol not in self.universe:
+                return
+        elif event.symbol not in self.config.subscriptions.symbols:
             return
 
         try:
@@ -203,7 +239,11 @@ class BaseStrategy(ABC):
 
     async def _handle_bar(self, event: BarEvent) -> None:
         """Handle bar event"""
-        if event.symbol not in self.config.subscriptions.symbols:
+        # Filter by configured symbols/universe
+        if self.universe:
+            if event.symbol not in self.universe:
+                return
+        elif event.symbol not in self.config.subscriptions.symbols:
             return
 
         try:
@@ -308,6 +348,105 @@ class BaseStrategy(ABC):
         """Check if position exists"""
         position = await self.get_position(symbol)
         return position is not None and position.quantity != 0
+
+    # Universe query methods
+
+    def get_ticker(self, ticker_id: str):
+        """
+        Get ticker by ID
+
+        Args:
+            ticker_id: Ticker identifier (e.g., "crypto_majors")
+
+        Returns:
+            Ticker instance or None
+
+        Example:
+            majors = self.get_ticker("crypto_majors")
+            for instrument in majors:
+                # Process each instrument in the ticker
+        """
+        if not self.universe:
+            logger.warning(f"Strategy {self.strategy_id} has no universe configured")
+            return None
+        return self.universe.get_ticker(ticker_id)
+
+    def get_instruments_by_tag(self, tag: str):
+        """
+        Get all instruments with specific tag
+
+        Args:
+            tag: Tag to filter by (e.g., "major", "high_liquidity")
+
+        Returns:
+            List of Instrument objects
+
+        Example:
+            majors = self.get_instruments_by_tag("major")
+            for instrument in majors:
+                print(f"{instrument.symbol}: {instrument.weight}")
+        """
+        if not self.universe:
+            return []
+        return self.universe.get_by_tag(tag)
+
+    def filter_universe(self, **kwargs):
+        """
+        Filter universe instruments
+
+        Args:
+            **kwargs: Filter parameters (e.g., symbol_pattern="BTC/*")
+
+        Returns:
+            List of filtered Instrument objects
+
+        Examples:
+            # Get all BTC products
+            btc_products = self.filter_universe(symbol_pattern="BTC/*")
+
+            # Get all USDT pairs
+            usdt_pairs = self.filter_universe(tags=["usdt_pair"])
+
+            # Get all spot instruments on Binance
+            binance_spot = self.filter_universe(
+                exchange=["binance"],
+                instrument_type=[InstrumentType.SPOT]
+            )
+        """
+        if not self.universe:
+            return []
+        return self.universe.filter(**kwargs)
+
+    def get_all_instruments(self):
+        """
+        Get all instruments in universe
+
+        Returns:
+            List of all Instrument objects
+
+        Example:
+            for instrument in self.get_all_instruments():
+                print(f"{instrument.symbol} @ {instrument.exchange}")
+        """
+        if not self.universe:
+            return []
+        return self.universe.get_all_instruments()
+
+    def get_universe_symbols(self):
+        """
+        Get list of all symbols in universe
+
+        Returns:
+            List of symbol strings
+
+        Example:
+            symbols = self.get_universe_symbols()
+            print(f"Trading {len(symbols)} instruments")
+        """
+        if not self.universe:
+            # Fall back to legacy subscriptions
+            return self.config.subscriptions.symbols
+        return self.universe.get_symbols()
 
     # Abstract methods - implement in subclass
 

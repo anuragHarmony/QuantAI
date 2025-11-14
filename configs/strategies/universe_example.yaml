@@ -1,0 +1,95 @@
+# Example Strategy Using Universe and Tickers
+
+name: "Multi_Asset_Portfolio"
+version: "2.0.0"
+description: "Multi-asset strategy using universe and ticker groups"
+strategy_id: "multi_asset_v2"
+
+# Universe Configuration - The Recommended Way!
+universe:
+  name: "crypto_portfolio"
+  description: "Diversified crypto portfolio across majors and alts"
+
+  # Define tickers (groups of related instruments)
+  tickers:
+    # Major cryptocurrencies
+    - id: "crypto_majors"
+      description: "Top 3 cryptocurrencies by market cap"
+      type: "spot"
+      exchange: "binance"
+      tags: ["major", "high_liquidity"]
+      instruments:
+        - "BTC/USDT"
+        - "ETH/USDT"
+        - "BNB/USDT"
+
+    # Alt coins
+    - id: "crypto_alts"
+      description: "Selected altcoins"
+      type: "spot"
+      exchange: "binance"
+      tags: ["alt", "medium_liquidity"]
+      instruments:
+        - "SOL/USDT"
+        - "AVAX/USDT"
+        - "MATIC/USDT"
+
+    # BTC products (spot + futures)
+    - id: "btc_products"
+      description: "All BTC trading products"
+      instruments:
+        - symbol: "BTC/USDT"
+          exchange: "binance"
+          instrument_type: "spot"
+          tags: ["btc", "spot", "major"]
+          weight: 0.5
+        - symbol: "BTC/USDT:USDT"
+          exchange: "binance"
+          instrument_type: "perpetual"
+          tags: ["btc", "perp"]
+          weight: 0.3
+
+  # Individual instruments with full metadata
+  instruments:
+    - symbol: "ETH/BTC"
+      exchange: "binance"
+      instrument_type: "spot"
+      tags: ["eth", "btc_pair"]
+      weight: 0.15
+      enabled: true
+
+# Data subscriptions (applied to all universe instruments)
+subscriptions:
+  data_types: ["tick", "orderbook"]
+  bar_interval: "5m"
+
+# Strategy parameters
+parameters:
+  # Portfolio allocation
+  major_weight: 0.70
+  alt_weight: 0.30
+
+  # Rebalancing
+  rebalance_frequency_hours: 24
+  rebalance_threshold_pct: 5.0
+
+  # Risk per instrument
+  max_position_per_instrument: 0.15  # 15% max per instrument
+
+# Risk limits
+risk_limits:
+  max_position_size: 10.0
+  max_order_size: 2.0
+  max_daily_loss: 5000
+  max_concentration_pct: 25  # Max 25% in single position
+
+initial_positions_file: null
+save_state_on_stop: true
+state_file: "./data/strategy_state/multi_asset_v2.json"
+
+enabled: true
+paper_trading: false
+max_orders_per_minute: 30
+
+log_level: "INFO"
+log_file: "./logs/multi_asset.log"
