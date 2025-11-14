@@ -42,7 +42,7 @@ QuantAI/
 
 ## ✨ Features
 
-### Phase 2A (Current - Completed)
+### Phase 2A - Completed ✅
 
 - ✅ **SOLID Architecture**: Abstract base classes for all major components
 - ✅ **Async/Await**: Full async support throughout
@@ -59,7 +59,21 @@ QuantAI/
 - ✅ **REST API**: FastAPI with tool execution endpoints
 - ✅ **CLI Tool**: Interactive command-line interface
 
-### Coming Soon (Phase 2B+)
+### Phase 2B - In Progress 🚧
+
+- ✅ **Event System**: Production event-driven architecture (10k+ events/sec)
+  - Type-safe events (Market Data, Orders, Positions, Portfolio)
+  - Pub/sub event bus (in-memory + Redis for multi-process)
+  - Event filters with composition
+  - Event persistence for replay (coming)
+
+- 🚧 **Exchange Connectors**: Multi-exchange framework (in progress)
+- 🔜 **Order Management System**: Professional OMS with pre-trade checks
+- 🔜 **Portfolio Manager**: Real-time P&L and risk limits
+- 🔜 **Strategy Framework**: Simple event-driven strategies
+- 🔜 **Simulation Engine**: Data recording and replay
+
+### Coming Later (Phase 3+)
 
 - 🔜 Full backtesting engine with vectorbt
 - 🔜 Parallel strategy testing
