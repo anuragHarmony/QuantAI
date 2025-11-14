@@ -46,7 +46,7 @@ from .base import (
 )
 
 # Rate limiting
-from .rate_limiter import TokenBucket, RateLimiter
+from .rate_limiter import TokenBucket, TokenBucketRateLimiter
 
 # WebSocket
 from .websocket import ResilientWebSocket, WebSocketManager
@@ -95,7 +95,7 @@ __all__ = [
     "Instrument",
     # Rate Limiting
     "TokenBucket",
-    "RateLimiter",
+    "TokenBucketRateLimiter",
     # WebSocket
     "ResilientWebSocket",
     "WebSocketManager",

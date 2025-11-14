@@ -254,15 +254,22 @@ class PortfolioManager:
         total_pnl = realized_pnl + unrealized_pnl
 
         total_equity = self.initial_capital + total_pnl
+        cash_balance = self.initial_capital + realized_pnl  # Simplified
+        positions_value = unrealized_pnl
+
+        return_pct = (total_pnl / self.initial_capital * Decimal("100")) if self.initial_capital > 0 else Decimal("0")
 
         event = PortfolioValueEvent(
             exchange="portfolio",
             symbol="PORTFOLIO",
+            cash=cash_balance,
+            equity=positions_value,
             total_value=total_equity,
-            cash_balance=self.initial_capital + realized_pnl,  # Simplified
-            positions_value=unrealized_pnl,
             unrealized_pnl=unrealized_pnl,
             realized_pnl=realized_pnl,
+            total_pnl=total_pnl,
+            return_pct=return_pct,
+            initial_value=self.initial_capital,
         )
 
         await self.event_bus.publish(event)

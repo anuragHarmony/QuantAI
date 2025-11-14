@@ -33,6 +33,7 @@ from .risk import (
     DailyLossLimitCheck,
     CapitalCheck,
     RiskChecker,
+    create_default_risk_checker,
 )
 
 from .router import OrderRouter, RoutingDecision
@@ -50,6 +51,7 @@ __all__ = [
     "DailyLossLimitCheck",
     "CapitalCheck",
     "RiskChecker",
+    "create_default_risk_checker",
     # Routing
     "OrderRouter",
     "RoutingDecision",

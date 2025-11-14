@@ -33,6 +33,7 @@ from .base import (
     Position,
     Instrument,
     ConnectionState,
+    ExchangeType,
 )
 from .matching import OrderMatcher, FillModel
 from .slippage import ISlippageModel, create_slippage_model
@@ -81,6 +82,20 @@ class SimulatedInstrumentMapper(IInstrumentMapper):
                 price_step=Decimal("0.01"),
             )
         return self.instruments[symbol]
+
+    async def load_instruments(self) -> None:
+        """Load instruments (no-op for simulated exchange)"""
+        logger.debug("SimulatedInstrumentMapper: load_instruments called (no-op)")
+        # Instruments are created on-demand in get_instrument()
+        pass
+
+    async def is_valid_symbol(self, symbol: str) -> bool:
+        """Check if symbol is valid (all symbols are valid in simulation)"""
+        return True
+
+    async def list_instruments(self) -> List[Instrument]:
+        """List all known instruments"""
+        return list(self.instruments.values())
 
 
 class SimulatedMarketDataConnector(IMarketDataConnector):
@@ -176,6 +191,21 @@ class SimulatedMarketDataConnector(IMarketDataConnector):
         """Subscribe to bar/candle updates"""
         self.bar_handlers.append(handler)
         logger.debug(f"Subscribed to bars: {symbols} @ {interval}")
+
+    async def unsubscribe(self, symbols: list[str]) -> None:
+        """Unsubscribe from specific symbols (simulated - no-op)"""
+        logger.debug(f"Unsubscribed from symbols: {symbols}")
+        # In simulation mode, we don't need to actually unsubscribe
+        pass
+
+    async def unsubscribe_all(self) -> None:
+        """Unsubscribe from all symbols (simulated - no-op)"""
+        logger.debug("Unsubscribed from all symbols")
+        # Clear all handlers
+        self.tick_handlers.clear()
+        self.trade_handlers.clear()
+        self.order_book_handlers.clear()
+        self.bar_handlers.clear()
 
     async def replay_events(
         self,
@@ -369,6 +399,19 @@ class SimulatedExecutionConnector(IExecutionConnector):
             order_id=order_id,
             message="Order cancelled"
         )
+
+    async def cancel_all_orders(self, symbol: Optional[str] = None) -> int:
+        """Cancel all open orders, optionally filtered by symbol"""
+        open_orders = await self.get_open_orders(symbol)
+        cancelled_count = 0
+
+        for order in open_orders:
+            result = await self.cancel_order(order.order_id)
+            if result.success:
+                cancelled_count += 1
+
+        logger.info(f"Cancelled {cancelled_count} orders" + (f" for {symbol}" if symbol else ""))
+        return cancelled_count
 
     async def get_order_status(self, order_id: str) -> Optional[Order]:
         """Get order status"""
@@ -576,6 +619,24 @@ class SimulatedExchange(IExchange):
             f"fill={fill_model}, slippage={slippage_model}"
         )
 
+    @property
+    def name(self) -> str:
+        """Exchange name"""
+        return "simulated"
+
+    @property
+    def exchange_type(self) -> ExchangeType:
+        """Exchange type"""
+        return ExchangeType.CRYPTO  # Simulated exchange defaults to crypto
+
+    def is_connected(self) -> bool:
+        """Check if exchange is connected"""
+        return self.market_data.get_state() == ConnectionState.CONNECTED
+
+    def get_connection_state(self) -> ConnectionState:
+        """Get connection state"""
+        return self.market_data.get_state()
+
     async def connect(self) -> None:
         """Connect all components"""
         await self.market_data.connect()
@@ -599,10 +660,6 @@ class SimulatedExchange(IExchange):
     def get_instrument_mapper(self) -> IInstrumentMapper:
         """Get instrument mapper"""
         return self.instrument_mapper
-
-    def get_state(self) -> ConnectionState:
-        """Get connection state"""
-        return self.market_data.get_state()
 
     async def run_backtest(
         self,

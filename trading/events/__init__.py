@@ -86,6 +86,12 @@ from .position import (
     MarginCallEvent,
 )
 
+# Event Bus
+from .bus import (
+    IEventBus,
+    InMemoryEventBus,
+)
+
 __all__ = [
     # Base
     "BaseEvent",
@@ -126,4 +132,7 @@ __all__ = [
     "PortfolioValueEvent",
     "RiskLimitEvent",
     "MarginCallEvent",
+    # Event Bus
+    "IEventBus",
+    "InMemoryEventBus",
 ]

@@ -11,6 +11,7 @@ Events representing position and portfolio state changes:
 from datetime import datetime
 from typing import Optional, Literal
 from decimal import Decimal
+from enum import Enum
 
 from pydantic import Field
 

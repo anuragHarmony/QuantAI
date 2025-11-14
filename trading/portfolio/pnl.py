@@ -52,11 +52,13 @@ class PnLMetrics:
     # Risk metrics
     max_drawdown: Decimal
     max_drawdown_pct: Decimal
-    sharpe_ratio: Optional[Decimal] = None
 
     # Costs
     total_fees: Decimal
     net_pnl: Decimal  # P&L after fees
+
+    # Optional metrics
+    sharpe_ratio: Optional[Decimal] = None
 
 
 class PnLCalculator:

@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Optional, Literal
 from decimal import Decimal
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from .base import BaseEvent
 

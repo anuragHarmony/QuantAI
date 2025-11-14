@@ -50,7 +50,7 @@ from .base import (
     Instrument,
 )
 from .websocket import ResilientWebSocket
-from .rate_limiter import RateLimiter
+from .rate_limiter import TokenBucketRateLimiter
 from ..events.market_data import (
     TickEvent,
     TradeEvent,
@@ -453,7 +453,7 @@ class BinanceExecutionConnector(IExecutionConnector):
         api_key: str,
         api_secret: str,
         instrument_mapper: BinanceInstrumentMapper,
-        rate_limiter: RateLimiter,
+        rate_limiter: TokenBucketRateLimiter,
         rest_url: str = "https://api.binance.com"
     ):
         """
@@ -752,7 +752,7 @@ class BinanceExchange(IExchange):
 
         # Create components
         self.instrument_mapper = BinanceInstrumentMapper(market_type, rest_url)
-        self.rate_limiter = RateLimiter("binance")
+        self.rate_limiter = TokenBucketRateLimiter("binance")
 
         self.market_data = BinanceMarketDataConnector(
             instrument_mapper=self.instrument_mapper,
