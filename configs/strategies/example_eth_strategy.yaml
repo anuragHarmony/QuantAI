@@ -1,0 +1,42 @@
+# Example ETH Trading Strategy Configuration
+
+name: "ETH_Momentum"
+version: "1.0.0"
+description: "ETH/USDT momentum-based strategy"
+
+strategy_id: "eth_momentum_v1"
+
+subscriptions:
+  exchanges:
+    - "binance"
+  symbols:
+    - "ETH/USDT"
+  data_types:
+    - "tick"
+    - "trade"
+  bar_interval: "5m"
+
+parameters:
+  lookback_period: 20
+  momentum_threshold: 0.02
+  position_size: 1.0
+  max_hold_time_hours: 24
+  entry_score_threshold: 0.7
+
+risk_limits:
+  max_position_size: 5.0
+  max_order_size: 2.0
+  max_daily_loss: 2000
+  max_drawdown_pct: 15
+  max_concentration_pct: 40
+
+initial_positions_file: null
+save_state_on_stop: true
+state_file: "./data/strategy_state/eth_momentum_v1.json"
+
+enabled: true
+paper_trading: false
+max_orders_per_minute: 20
+
+log_level: "INFO"
+log_file: "./logs/eth_momentum.log"
