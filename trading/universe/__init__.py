@@ -29,7 +29,18 @@ Usage:
 from .instrument import Instrument, InstrumentType
 from .ticker import Ticker
 from .universe import Universe, UniverseConfig
-from .filters import InstrumentFilter, create_filter
+from .filters import (
+    InstrumentFilter,
+    SymbolPatternFilter,
+    ExchangeFilter,
+    InstrumentTypeFilter,
+    QuoteCurrencyFilter,
+    TagFilter,
+    AndFilter,
+    OrFilter,
+    NotFilter,
+    create_filter,
+)
 
 __all__ = [
     "Instrument",
@@ -38,5 +49,13 @@ __all__ = [
     "Universe",
     "UniverseConfig",
     "InstrumentFilter",
+    "SymbolPatternFilter",
+    "ExchangeFilter",
+    "InstrumentTypeFilter",
+    "QuoteCurrencyFilter",
+    "TagFilter",
+    "AndFilter",
+    "OrFilter",
+    "NotFilter",
     "create_filter",
 ]
