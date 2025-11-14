@@ -77,6 +77,13 @@ from .binance import (
     BinanceInstrumentMapper,
 )
 
+from .okx import (
+    OKXExchange,
+    OKXMarketDataConnector,
+    OKXExecutionConnector,
+    OKXInstrumentMapper,
+)
+
 __all__ = [
     # Base
     "IExchange",
@@ -118,4 +125,8 @@ __all__ = [
     "BinanceMarketDataConnector",
     "BinanceExecutionConnector",
     "BinanceInstrumentMapper",
+    "OKXExchange",
+    "OKXMarketDataConnector",
+    "OKXExecutionConnector",
+    "OKXInstrumentMapper",
 ]
