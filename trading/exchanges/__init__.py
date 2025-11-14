@@ -84,6 +84,13 @@ from .okx import (
     OKXInstrumentMapper,
 )
 
+from .bybit import (
+    BybitExchange,
+    BybitMarketDataConnector,
+    BybitExecutionConnector,
+    BybitInstrumentMapper,
+)
+
 __all__ = [
     # Base
     "IExchange",
@@ -129,4 +136,8 @@ __all__ = [
     "OKXMarketDataConnector",
     "OKXExecutionConnector",
     "OKXInstrumentMapper",
+    "BybitExchange",
+    "BybitMarketDataConnector",
+    "BybitExecutionConnector",
+    "BybitInstrumentMapper",
 ]
