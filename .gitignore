@@ -42,8 +42,9 @@ env/
 logs/
 *.log
 
-# Data
-data/
+# Data (but allow research/data/ which contains code)
+/data/
+!research/data/
 *.db
 *.sqlite
 
