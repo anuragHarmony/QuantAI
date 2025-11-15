@@ -325,31 +325,94 @@ class ResearchOrchestrator:
         generated_code: GeneratedCode
     ) -> Dict[str, Any]:
         """
-        Run backtest on generated strategy
-
-        Note: This is a placeholder. In production, integrate with actual
-        backtesting framework.
+        Run backtest on generated strategy using real backtesting engine
         """
         logger.info("Running backtest...")
 
-        # TODO: Integrate with actual backtesting framework
-        # For now, return mock results
-        import random
+        try:
+            # Import backtesting components
+            from backtesting import BacktestEngine, load_strategy_from_code
 
-        # Simulate backtest results
-        await asyncio.sleep(0.5)  # Simulate backtest time
+            # Load strategy from generated code
+            logger.debug("Loading strategy code...")
+            strategy_class = load_strategy_from_code(
+                generated_code.code,
+                generated_code.class_name
+            )
 
-        results = {
-            "sharpe_ratio": random.uniform(-0.5, 2.5),
-            "total_return": random.uniform(-20, 50),
-            "win_rate": random.uniform(0.35, 0.65),
-            "total_trades": random.randint(20, 200),
-            "max_drawdown": random.uniform(5, 30),
-            "profit_factor": random.uniform(0.5, 2.5),
-        }
+            # Fetch market data for backtesting
+            logger.debug("Fetching market data...")
+            market_data = await self.data_provider.fetch_ohlcv(
+                symbol=self.config.backtest_symbol,
+                timeframe=self.config.backtest_timeframe,
+                start_date=datetime.fromisoformat(self.config.backtest_start_date),
+                end_date=datetime.fromisoformat(self.config.backtest_end_date)
+            )
 
-        logger.info(f"Backtest complete. Sharpe: {results['sharpe_ratio']:.2f}")
-        return results
+            # Initialize backtest engine
+            engine = BacktestEngine(
+                initial_capital=10000.0,
+                commission=0.001,  # 0.1% commission
+                slippage=0.0005,   # 0.05% slippage
+                position_size_pct=1.0,  # 100% of capital
+                max_positions=1,
+                enable_shorting=True
+            )
+
+            # Run backtest
+            logger.debug("Executing backtest...")
+            result = await engine.run_backtest(
+                strategy_class=strategy_class,
+                data=market_data.data,
+                strategy_parameters=generated_code.metadata.get('risk_management', {}),
+                symbol=self.config.backtest_symbol,
+                timeframe=self.config.backtest_timeframe
+            )
+
+            # Convert to dict format
+            results = {
+                "sharpe_ratio": result.metrics.sharpe_ratio,
+                "total_return": result.metrics.total_return * 100,  # Convert to percentage
+                "annualized_return": result.metrics.annualized_return * 100,
+                "win_rate": result.metrics.win_rate,
+                "total_trades": result.metrics.total_trades,
+                "winning_trades": result.metrics.winning_trades,
+                "losing_trades": result.metrics.losing_trades,
+                "max_drawdown": result.metrics.max_drawdown * 100,
+                "profit_factor": result.metrics.profit_factor,
+                "sortino_ratio": result.metrics.sortino_ratio,
+                "calmar_ratio": result.metrics.calmar_ratio,
+                "expectancy": result.metrics.expectancy,
+                "avg_win": result.metrics.avg_win,
+                "avg_loss": result.metrics.avg_loss,
+                "best_trade": result.metrics.best_trade,
+                "worst_trade": result.metrics.worst_trade,
+                "volatility": result.metrics.volatility * 100,
+                "avg_trade_duration": result.metrics.avg_trade_duration,
+            }
+
+            logger.success(
+                f"Backtest complete. Sharpe: {results['sharpe_ratio']:.2f}, "
+                f"Return: {results['total_return']:.1f}%, Trades: {results['total_trades']}"
+            )
+
+            return results
+
+        except Exception as e:
+            logger.error(f"Backtest failed: {e}")
+            import traceback
+            traceback.print_exc()
+
+            # Return failed backtest results
+            return {
+                "sharpe_ratio": -999.0,  # Clearly failed
+                "total_return": -100.0,
+                "win_rate": 0.0,
+                "total_trades": 0,
+                "max_drawdown": 100.0,
+                "profit_factor": 0.0,
+                "error": str(e)
+            }
 
     async def _create_experiment(
         self,
