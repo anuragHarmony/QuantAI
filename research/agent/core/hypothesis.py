@@ -33,10 +33,10 @@ class StrategyHypothesis(Hypothesis):
     Single Responsibility: Represent a testable strategy idea
     """
     # Core strategy elements
-    indicators: List[str]  # e.g., ["RSI", "MACD", "Bollinger Bands"]
-    entry_logic: str  # Description of entry conditions
-    exit_logic: str  # Description of exit conditions
-    risk_management: Dict[str, Any]  # Stop loss, position sizing, etc.
+    indicators: List[str] = field(default_factory=list)  # e.g., ["RSI", "MACD", "Bollinger Bands"]
+    entry_logic: str = ""  # Description of entry conditions
+    exit_logic: str = ""  # Description of exit conditions
+    risk_management: Dict[str, Any] = field(default_factory=dict)  # Stop loss, position sizing, etc.
 
     # Market context
     target_regime: Optional[str] = None  # "trending", "ranging", etc.

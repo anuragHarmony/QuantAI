@@ -41,13 +41,10 @@ class StrategyLoader:
         try:
             # Write code to temp file
             with open(temp_file, 'w') as f:
-                # Add necessary imports if not present
-                if "import pandas" not in code and "from pandas" not in code:
-                    f.write("import pandas as pd\n")
-                if "import numpy" not in code and "from numpy" not in code:
-                    f.write("import numpy as np\n")
-                if "from typing" not in code:
-                    f.write("from typing import Dict, Any\n\n")
+                # Always add necessary imports first (before anything else)
+                f.write("import pandas as pd\n")
+                f.write("import numpy as np\n")
+                f.write("from typing import Dict, Any\n\n")
 
                 # Add BaseStrategy if not present
                 if "class BaseStrategy" not in code:

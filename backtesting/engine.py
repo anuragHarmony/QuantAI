@@ -252,10 +252,9 @@ class BacktestEngine:
 
                         equity += pnl
                         current_position = None
-                        continue
 
                     # Check take profit (best case: hit high)
-                    if take_profit_pct and (high - current_position.entry_price) / current_position.entry_price >= take_profit_pct:
+                    if current_position is not None and take_profit_pct and (high - current_position.entry_price) / current_position.entry_price >= take_profit_pct:
                         exit_price = current_position.entry_price * (1 + take_profit_pct)
                         pnl = (exit_price - current_position.entry_price) * current_position.size
                         pnl -= self._calculate_cost(exit_price, current_position.size)
@@ -273,7 +272,6 @@ class BacktestEngine:
 
                         equity += pnl
                         current_position = None
-                        continue
 
                 else:  # short
                     unrealized_pnl = (current_position.entry_price - price) * abs(current_position.size)
@@ -298,12 +296,12 @@ class BacktestEngine:
 
                         equity += pnl
                         current_position = None
-                        continue
 
-                current_position.unrealized_pnl = unrealized_pnl
+                if current_position is not None:
+                    current_position.unrealized_pnl = unrealized_pnl
 
                 # Exit signal
-                if signal == -1 and current_position.direction == 'long':
+                if current_position is not None and signal == -1 and current_position.direction == 'long':
                     # Exit long
                     exit_price = price * (1 - self.slippage)
                     pnl = (exit_price - current_position.entry_price) * current_position.size
@@ -323,7 +321,7 @@ class BacktestEngine:
                     equity += pnl
                     current_position = None
 
-                elif signal == 1 and current_position.direction == 'short':
+                elif current_position is not None and signal == 1 and current_position.direction == 'short':
                     # Exit short
                     exit_price = price * (1 + self.slippage)
                     pnl = (current_position.entry_price - exit_price) * abs(current_position.size)
